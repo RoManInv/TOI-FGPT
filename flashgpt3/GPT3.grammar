@@ -1,0 +1,12 @@
+using semantics FlashGPT3.Semantics;
+using learners FlashGPT3.WitnessFunctions;
+
+language GPT3;
+
+@complete feature double Score = FlashGPT3.RankingScore;
+@complete feature ProgramInfo CompositeScore = FlashGPT3.CompositeRankingScore;
+
+@start string e := SemMap(v, q);
+@input string v;
+
+Tuple<string, string>[]  q;

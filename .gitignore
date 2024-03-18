@@ -1,0 +1,8 @@
+*.txt
+!openaikey.txt
+*.json
+!toi.json
+flashgpt3/bin
+flashgpt3/cache
+flashgpt3/obj
+.vs

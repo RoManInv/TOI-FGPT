@@ -1,0 +1,23 @@
+using semantics FlashGPT3.Semantics;
+using learners FlashGPT3.WitnessFunctions;
+
+language FlashGPT3;
+
+@complete feature double Score = FlashGPT3.RankingScore;
+@complete feature ProgramInfo CompositeScore = FlashGPT3.CompositeRankingScore;
+
+@start string e := f | Concat(f, e);
+string        f := SubStr(v, pos, pos)
+                 | ConstStr(m)
+                 | SemMap(v, q);
+
+int pos := AbsPos(v, k)
+         | RegPos(v, r, r, k)
+         | SemPos(v, q, d);
+
+@input string v;
+int k;  string m;  Regex r;
+Tuple<string, string>[]  q;
+
+// Generator for direction.
+@values[DirGen] string d;
