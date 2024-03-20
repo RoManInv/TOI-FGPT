@@ -108,10 +108,11 @@ namespace FlashGPT3
             return (resultSet, observedTOI);
         }
 
-        public (List<Tuple<string, string>>, Dictionary<string, float[]>) Horizontal_One(string left, string right)
+        public (List<Tuple<string, string>>, Dictionary<string, float[]>) Horizontal_One(string left, string right, string left_orig, string right_orig)
         {
             List<Tuple<string, string>> results = new();
             Dictionary<string, float[]> observedTOI = new();
+            List<string> non_ending_punkt = new List<string>() { ",", "-", "_" };
 
             TOIIdent toi = new TOIIdent();
             EmbeddingHelper embHelper = new OpenAIEmbeddingHelper();
@@ -154,6 +155,7 @@ namespace FlashGPT3
                     else remb = embHelper.GetEmb(j);
 
                     float dist = Similarity.GetCosineSimilarity(lemb, remb);
+                    //Console.WriteLine(i + " " + j + " " + dist.ToString());
                     if (stopwords.Contains(i.ToLower()) || stopwords.Contains(j.ToLower()))
                     {
                         dist = dist * stopwordPunishment;
@@ -190,12 +192,12 @@ namespace FlashGPT3
             {
                 if (!leftGreedLeft)
                 {
-                    if (left.StartsWith(currLeft))
+                    if (left_orig.StartsWith(currLeft))
                     {
                         leftGreedLeft = true;
                         continue;
                     }
-                    int? idx = left.Split().IndexOf(currLeft.Split()[0]);
+                    int? idx = left_orig.Split().IndexOf(currLeft.Split()[0]);
                     int idxnotnull;
                     if (idx is not null && idx > 0)
                     {
@@ -203,13 +205,15 @@ namespace FlashGPT3
                     }
                     else
                     {
-                        idxnotnull = 0;
+                        idxnotnull = -1;
                     }
-                    if (idxnotnull <= 0) { leftGreedLeft = true; continue; }
-                    var tempLeft = left.Split()[idxnotnull] + " " + currLeft;
+                    if (idxnotnull < 0) { leftGreedLeft = true; continue; }
+                    var tempLeft = left_orig.Split()[idxnotnull] + " " + currLeft;
                     var tempLeftEmb = embHelper.GetEmb(tempLeft);
                     var tempDist = Similarity.GetCosineSimilarity(tempLeftEmb, currRightEmb);
-                    if (stopwords.Contains(left.Split()[idxnotnull].ToLower()))
+                    //Console.WriteLine(tempLeft + " " + currRight + " " + tempDist.ToString());
+
+                    if (stopwords.Contains(left_orig.Split()[idxnotnull].ToLower()))
                     {
                         tempDist = tempDist * stopwordPunishment;
                     }
@@ -235,13 +239,13 @@ namespace FlashGPT3
                 }
                 if (!leftGreedRight)
                 {
-                    if (left.EndsWith(currLeft))
+                    if (left_orig.EndsWith(currLeft))
                     {
                         leftGreedRight = true;
                         continue;
                     }
 
-                    int? idx = left.Split().IndexOf(currLeft.Split()[^1]);
+                    int? idx = left_orig.Split().IndexOf(currLeft.Split()[^1]);
                     int idxnotnull;
                     if (idx is not null)
                     {
@@ -249,13 +253,14 @@ namespace FlashGPT3
                     }
                     else
                     {
-                        idxnotnull = 0;
+                        idxnotnull = -1;
                     }
-                    if (idxnotnull > left.Split().Length) { leftGreedRight = true; continue; }
-                    var tempLeft = currLeft + " " + left.Split()[idxnotnull];
+                    if (idxnotnull > left_orig.Split().Length || idxnotnull < 0) { leftGreedRight = true; continue; }
+                    var tempLeft = currLeft + " " + left_orig.Split()[idxnotnull];
                     var tempLeftEmb = embHelper.GetEmb(tempLeft);
                     var tempDist = Similarity.GetCosineSimilarity(tempLeftEmb, currRightEmb);
-                    if (stopwords.Contains(left.Split()[idxnotnull].ToLower()))
+                    //Console.WriteLine(tempLeft + " " + currRight + " " + tempDist.ToString());
+                    if (stopwords.Contains(left_orig.Split()[idxnotnull].ToLower()))
                     {
                         tempDist = tempDist * stopwordPunishment;
                     }
@@ -280,13 +285,13 @@ namespace FlashGPT3
                 }
                 if (!rightGreedLeft)
                 {
-                    if (right.StartsWith(currRight))
+                    if (right_orig.StartsWith(currRight))
                     {
                         rightGreedLeft = true;
                         continue;
                     }
 
-                    int? idx = right.Split().IndexOf(currRight.Split()[0]);
+                    int? idx = right_orig.Split().IndexOf(currRight.Split()[0]);
                     int idxnotnull;
                     if (idx is not null)
                     {
@@ -294,13 +299,15 @@ namespace FlashGPT3
                     }
                     else
                     {
-                        idxnotnull = 0;
+                        idxnotnull = -1;
                     }
-                    if (idxnotnull <= 0) { rightGreedLeft = true; continue; }
-                    var tempRight = right.Split()[idxnotnull] + " " + currRight;
+                    if (idxnotnull < 0) { rightGreedLeft = true; continue; }
+                    //Console.WriteLine(idxnotnull);
+                    var tempRight = right_orig.Split()[idxnotnull] + " " + currRight;
                     var tempRighrEmb = embHelper.GetEmb(tempRight);
                     var tempDist = Similarity.GetCosineSimilarity(tempRighrEmb, currLeftEmb);
-                    if (stopwords.Contains(right.Split()[idxnotnull].ToLower()))
+                    //Console.WriteLine(currLeft + " " + tempRight + " " + tempDist.ToString());
+                    if (stopwords.Contains(right_orig.Split()[idxnotnull].ToLower()))
                     {
                         tempDist = tempDist * stopwordPunishment;
                     }
@@ -325,13 +332,13 @@ namespace FlashGPT3
                 }
                 if (!rightGreedRight)
                 {
-                    if (right.EndsWith(currRight))
+                    if (right_orig.EndsWith(currRight))
                     {
                         rightGreedRight = true;
                         continue;
                     }
 
-                    int? idx = right.Split().IndexOf(currRight.Split()[^1]);
+                    int? idx = right_orig.Split().IndexOf(currRight.Split()[^1]);
                     int idxnotnull;
                     if (idx is not null)
                     {
@@ -339,13 +346,14 @@ namespace FlashGPT3
                     }
                     else
                     {
-                        idxnotnull = 0;
+                        idxnotnull = -1;
                     }
-                    if (idxnotnull > right.Split().Length) { rightGreedRight = true; continue; }
-                    var tempRight = currRight + " " + right.Split()[idxnotnull];
+                    if (idxnotnull > right_orig.Split().Length || idxnotnull < 0) { rightGreedRight = true; continue; }
+                    var tempRight = currRight + " " + right_orig.Split()[idxnotnull];
                     var tempRighrEmb = embHelper.GetEmb(tempRight);
                     var tempDist = Similarity.GetCosineSimilarity(tempRighrEmb, currLeftEmb);
-                    if (stopwords.Contains(right.Split()[idxnotnull].ToLower()))
+                    //Console.WriteLine(currLeft + " " + tempRight + " " + tempDist.ToString());
+                    if (stopwords.Contains(right_orig.Split()[idxnotnull].ToLower()))
                     {
                         tempDist = tempDist * stopwordPunishment;
                     }
@@ -374,14 +382,37 @@ namespace FlashGPT3
                 }
             }
 
-            int toiCount = AllCandidates.Count >= 3 ? 3 : AllCandidates.Count;
+            Dictionary<Tuple<string, string>, float> AllCandidates_valid = new();
+            bool skipflag = false;
+            skipflag = AllCandidates.All(item => (non_ending_punkt.Any(s => item.Key.Item1.Trim().EndsWith(s)) ||
+                                                  non_ending_punkt.Any(s => item.Key.Item2.Trim().EndsWith(s))));
 
-            List<Tuple<string, string>> maxKeyValue = AllCandidates.OrderByDescending(kv => kv.Value)
+            foreach (var item in AllCandidates)
+            {
+                if (skipflag ||
+                    (!non_ending_punkt.Any(s => item.Key.Item1.Trim().EndsWith(s)) &&
+                    !non_ending_punkt.Any(s => item.Key.Item2.Trim().EndsWith(s))) ||
+                    AllCandidates.Count == 1)
+                {
+                    AllCandidates_valid.Add(item.Key, item.Value);
+                }
+            }
+
+            int toiCount = AllCandidates_valid.Count >= 3 ? 3 : AllCandidates.Count;
+
+            List<Tuple<string, string>> maxKeyValue = AllCandidates_valid.OrderByDescending(kv => kv.Value)
                                                                    .ThenByDescending(kv => kv.Key.Item1.Length + kv.Key.Item2.Length)
                                                                    .Take(toiCount)
                                                                    .ToDictionary<Tuple<string, string>, float>()
                                                                    .Keys.ToList();
-
+            //List<Tuple<string, string>> maxKeyValue_valid = new List<Tuple<string, string>>();
+            //foreach (var item in maxKeyValue)
+            //{
+            //    if (!non_ending_punkt.Any(s => item.Item1.EndsWith(s)) && !non_ending_punkt.Any(s => item.Item2.EndsWith(s)))
+            //    {
+            //        maxKeyValue.Add(new Tuple<string, string>(item.Item1, item.Item2));
+            //    }
+            //}
             foreach (var item in maxKeyValue)
             {
                 observedTOI[item.Item1 + " " + item.Item2] = embHelper.GetEmb(item.Item1 + " " + item.Item2);
